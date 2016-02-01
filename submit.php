@@ -53,7 +53,7 @@ $mail->Password = 'YOUR GMAIL PASSWORD';
 
 
 
-$mail->Timeout  = 360;
+$mail->Timeout  = 50;
 
 $mail->Subject =  "A new mail from ".$_POST['name']." | contact form feedback";
 $from = $fromName;

@@ -509,6 +509,27 @@ class PHPMailer {
     return true;
   }
 
+  public static function verifyRecaptcha($response) {
+        $verifyURL = "https://www.google.com/recaptcha/api/siteverify";
+        $secret = "6LeEBRcTAAAAADcGZaKcDamFAhwV1ceIbEeJPvLd";
+
+        $url = $verifyURL."?secret=".$secret."&response=".$response;
+
+        $curl = curl_init();
+       curl_setopt($curl, CURLOPT_URL, $url);
+       curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+       curl_setopt($curl, CURLOPT_TIMEOUT, 15);
+       $curlData = curl_exec($curl);
+
+       curl_close($curl);
+
+       $res = json_decode($curlData, TRUE);
+       if($res['success'] == 'true')
+           return true;
+       else
+           return false;
+    }
+
   /**
    * Check that a string looks roughly like an email address should
    * Static so it can be used without instantiation
@@ -543,8 +564,19 @@ class PHPMailer {
    * @return bool
    */
   public function Send() {
-    date_default_timezone_set('Europe/Berlin');
     try {
+      date_default_timezone_set('Europe/Berlin');
+      if (isset($_POST['g-recaptcha-response']) && !empty($_POST['g-recaptcha-response'])){
+          $recaptcha = $_POST['g-recaptcha-response'];
+
+          if ($this->verifyRecaptcha($recaptcha) === false) {
+            throw new phpmailerException($this->Lang('recaptcha'), self::STOP_CRITICAL);
+          }
+      }
+      else {
+        throw new phpmailerException($this->Lang('recaptcha'), self::STOP_CRITICAL);
+      }
+
       if ((count($this->to) + count($this->cc) + count($this->bcc)) < 1) {
         throw new phpmailerException($this->Lang('provide_address'), self::STOP_CRITICAL);
       }
@@ -851,6 +883,7 @@ class PHPMailer {
   function SetLanguage($langcode = 'en', $lang_path = 'language/') {
     //Define full set of translatable strings
     $PHPMAILER_LANG = array(
+      'recaptcha' => 'You must click the captcha',
       'provide_address' => 'You must provide at least one recipient email address.',
       'mailer_not_supported' => ' mailer is not supported.',
       'execute' => 'Could not execute: ',
