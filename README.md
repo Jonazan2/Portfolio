@@ -1,3 +1,3 @@
 # www.jonathanmcontreras.com
 
-Powered by Papyrus purchased by ThemeForest.
+Powered by Papyrus HTML5 theme.
